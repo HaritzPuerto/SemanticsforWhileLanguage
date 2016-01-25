@@ -6,7 +6,7 @@ Fall 2015
 Implementation in Haskell of the concepts covered in Chapter 1 of
 Nielson & Nielson, Semantics with Applications
 
-Author:
+Author: Haritz Puerto-San-Roman
 
 -}
 
@@ -42,10 +42,13 @@ six :: Bin
 six = B (B (MSB I) I) O
 
 -- | define a semantic function 'binVal' that associates
--- | a number (in the decimal system) to each binary numeral.
+-- | a binary number (Bin) to a decimal number.
 
 binVal :: Bin -> Z
-binVal = undefined
+binVal (MSB O) = 0
+binVal (MSB I) = 1
+binVal (B b O) = 2*(binVal b)
+binVal (B b I) = 2*(binVal b) + 1
 
 -- | Test your function with HUnit.
 
