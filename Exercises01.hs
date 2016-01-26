@@ -148,10 +148,21 @@ data Subst = Var :->: Aexp
 -- | i.e., replaces every occurrence of 'y' in 'a' by 'a0'.
 
 substAexp :: Aexp -> Subst -> Aexp
-substAexp = undefined
+substAexp (N x) _ = (N x)
+substAexp (V x) (y:->:a0) 
+			| x == y = a0
+			| otherwise = (V x)
+substAexp (Add a1 a2) s = Add (substAexp a1 s) (substAexp a2 s)
+substAexp (Mult a1 a2) s = Mult (substAexp a1 s) (substAexp a2 s)
+substAexp (Sub a1 a2) s = Sub (substAexp a1 s) (substAexp a2 s)
 
--- | Test your function with HUnit.
-
+testSubstAexp :: Test
+testSubstAexp = test ["5 [y:->:x]" ~: (N 5) ~=? substAexp (N 5) ("y":->: (V "x")),
+					  "y [y:->:x]" ~: (V "x") ~=? substAexp (V "y") ("y":->: (V "x")),
+					  "y [z:->:x]" ~: (V "y") ~=? substAexp (V "y") ("z":->: (V "x")),
+					  "(Add (N 5) (V y)) [y:->:x]" ~: (Add (N 5) (V "x")) ~=? substAexp (Add (N 5) (V "y")) ("y":->: (V "x")),
+					  "(Mult (N 5) (V y)) [y:->:x]" ~: (Mult (N 5) (V "x")) ~=? substAexp (Mult (N 5) (V "y")) ("y":->: (V "x")),
+					  "(Sub (N 5) (V y)) [y:->:x]" ~: (Sub (N 5) (V "x")) ~=? substAexp (Sub (N 5) (V "y")) ("y":->: (V "x"))]
 -- todo
 
 -- | Define a function 'substBexp' that implements substitution for
