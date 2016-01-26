@@ -14,6 +14,7 @@ module Exercises01 where
 
 import While
 import Test.HUnit hiding (State)
+import Data.List
 
 -- |----------------------------------------------------------------------
 -- | Exercise 1
@@ -93,22 +94,48 @@ testBinVal' = test ["value of zero" ~: 0 ~=? binVal' zero,
 -- | occurs once in the resulting list.
 
 fvAexp :: Aexp -> [Var]
-fvAexp = undefined
+fvAexp (N x) = []
+fvAexp (V x) = [x]
+fvAexp (Add x y) = nub $ (fvAexp x) ++ (fvAexp y)
+fvAexp (Mult x y) = nub $ (fvAexp x) ++ (fvAexp y)
+fvAexp (Sub x y) = nub $ (fvAexp x) ++ (fvAexp y)
+
+-- nub is available at Data.List It removes repeated elements
+removeRepeatedElems :: Eq a => [a] -> [a]
+removeRepeatedElems [] = []
+removeRepeatedElems (x:xs)
+	| elem x xs = xs
+	| otherwise = x:xs
 
 -- | Test your function with HUnit.
 
--- todo
+testfvAexp :: Test
+testfvAexp = test ["FV(x)" ~: ["x"] ~=? fvAexp (V "x"),
+				   "FV(5)" ~: [] ~=? fvAexp (N 5),
+				   "FV(x + 3)" ~: ["x"] ~=? fvAexp (Add (V "x") (N 3)),
+				   "FV(x * 3)" ~: ["x"] ~=? fvAexp (Mult (V "x") (N 3)),
+				   "FV(x - y)" ~: ["x", "y"] ~=? fvAexp (Add (V "x") (V "y"))]
 
 -- | Define the function 'fvBexp' that computes the set of free variables
 -- | occurring in a Boolean expression.
-
 fvBexp :: Bexp -> [Var]
-fvBexp = undefined
+fvBexp TRUE = []
+fvBexp FALSE = []
+fvBexp (Eq x y) = nub $ (fvAexp x) ++ (fvAexp y)
+fvBexp (Le x y) = nub $ (fvAexp x) ++ (fvAexp y)
+fvBexp (Neg b) = nub $ (fvBexp b)
+fvBexp (And b bb) = nub $ (fvBexp b) ++ (fvBexp bb) 
+
 
 -- | Test your function with HUnit.
 
--- todo
-
+testfvBexp :: Test
+testfvBexp = test ["FV(TRUE)" ~: ["x"] ~=? fvBexp TRUE,
+				   "FV(FALSE)" ~: [] ~=? fvBexp FALSE,
+				   "FV((Eq (V x) (V y) ))" ~: ["x", "y"] ~=? fvBexp (Eq (V "x") (V "y") ),
+				   "FV((Le (V x) (V y) ))" ~: ["x", "y"] ~=? fvBexp ((Le (V "x") (V "y") )),
+				   "FV((Neg (Eq (V x) (V y) )))" ~: ["x", "y"] ~=? fvBexp (Neg (Eq (V "x") (V "y") )),
+				   "FV((And (Eq (V x) (V y) ) (Eq (V x) (V y) ) ))" ~: ["x", "y"] ~=? fvBexp (And (Eq (V "x") (V "y") ) (Eq (V "x") (V "y") )) ]
 -- |----------------------------------------------------------------------
 -- | Exercise 3
 -- |----------------------------------------------------------------------
