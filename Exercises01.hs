@@ -60,17 +60,30 @@ testBinVal = test ["value of zero"  ~: 0 ~=? binVal zero,
 
 -- | If you dare, define a function 'foldBin' to fold a value of type 'Bin'
 
-foldBin :: a
-foldBin = undefined
+foldBin :: (Bit -> Z -> Z) -> Z -> Bin -> Z
+foldBin f base x = solve x
+	where
+		solve (MSB z) = z `f` base
+		solve (B x z) = z `f` (solve x)
+
+
+fbin :: Bit -> Z -> Z
+fbin O x = 2 * x
+fbin I x = 1 + 2 * x
+
 
 -- | and use 'foldBin' to define a function 'binVal''  equivalent to 'binVal'
 
 binVal' :: Bin -> Integer
-binVal' = undefined
+binVal' b = foldBin fbin 0 b
 
 -- | Test your function with HUnit.
 
--- todo
+testBinVal' :: Test
+testBinVal' = test ["value of zero" ~: 0 ~=? binVal' zero,
+					"value of one"   ~: 1 ~=? binVal one,
+                    "value of three" ~: 3 ~=? binVal three,
+                    "value of six"   ~: 6 ~=? binVal six]
 
 -- |----------------------------------------------------------------------
 -- | Exercise 2
