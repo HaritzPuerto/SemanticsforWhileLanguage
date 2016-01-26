@@ -163,17 +163,27 @@ testSubstAexp = test ["5 [y:->:x]" ~: (N 5) ~=? substAexp (N 5) ("y":->: (V "x")
 					  "(Add (N 5) (V y)) [y:->:x]" ~: (Add (N 5) (V "x")) ~=? substAexp (Add (N 5) (V "y")) ("y":->: (V "x")),
 					  "(Mult (N 5) (V y)) [y:->:x]" ~: (Mult (N 5) (V "x")) ~=? substAexp (Mult (N 5) (V "y")) ("y":->: (V "x")),
 					  "(Sub (N 5) (V y)) [y:->:x]" ~: (Sub (N 5) (V "x")) ~=? substAexp (Sub (N 5) (V "y")) ("y":->: (V "x"))]
--- todo
 
 -- | Define a function 'substBexp' that implements substitution for
 -- | Boolean expressions.
 
-substBexp :: Bexp -> Subst -> Bexp
-substBexp = undefined
+substBexp :: Bexp -> Subst -> Bexp 
+substBexp TRUE _ = TRUE
+substBexp FALSE _ = FALSE
+substBexp (Eq x y) subs =  (Eq (substAexp x subs) (substAexp y subs))
+substBexp (Le x y) subs = (Le (substAexp x subs) (substAexp y subs))
+substBexp (Neg b) subs = (Neg (substBexp b subs))
+substBexp (And b bb) subs = (And (substBexp b subs) (substBexp bb subs))
 
 -- | Test your function with HUnit.
+testsubstBexp :: Test
+testsubstBexp = test ["TRUE [y:->:x]" ~: TRUE ~=? substBexp TRUE ("y":->: (V "x")),
+					  "FALSE [y:->:x]" ~: FALSE ~=? substBexp FALSE ("y":->: (V "x")),
+					  "(a1 == a2) [y:->:x]" ~: (Eq (V "x") (N 5) ) ~=? substBexp (Eq (V "y") (N 5) ) ("y":->: (V "x")),
+					  "(a1 < a2) [y:->:x]" ~: (Le (V "x") (N 5) ) ~=? substBexp (Le (V "y") (N 5) ) ("y":->: (V "x")),
+					  "(! (a1 == a2) ) [y:->:x]" ~: (Neg (Eq (V "x") (N 5) )) ~=? substBexp (Eq (V "y") (N 5) ) ("y":->: (V "x")),
+					  "(AND TRUE (V y)) [y:->:x]" ~: (And (Eq (V "z") (N 5) ) (Le (V "x") (N 5) )) ~=? substBexp (And (Eq (V "z") (N 5) ) (Le (V "y") (N 5) )) ("y":->: (V "x"))]
 
--- todo
 
 -- |----------------------------------------------------------------------
 -- | Exercise 4
