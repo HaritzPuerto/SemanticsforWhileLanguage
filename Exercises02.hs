@@ -74,7 +74,8 @@ fvStm (If b s1 s2) = nub $ (fvBexp' b) ++ (fvStm s1) ++ (fvStm s2)
 fvStm (While b s) = nub $ (fvBexp' b) ++ (fvStm s)
 
 -- | Test your function with HUnit. Beware the order or appearance.
-
+testFvStm :: Test
+testFvStm = test["fvStm factorial" ~: ["y", "x"] ~=? fvStm factorial]
 
 -- | Exercise 1.3
 -- | Define a function 'showFinalState' that given a WHILE statement and a
