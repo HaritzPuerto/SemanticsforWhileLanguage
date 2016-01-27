@@ -258,16 +258,28 @@ subsVar (y:->:a0) x
 -- | to define the functions 'bVal'', 'fvBexp'', and 'substAexp''. Test
 -- | your definitions with HUnit.
 
-foldBexp :: a
-foldBexp = undefined
-
+foldBexp :: a -> a ->
+			(Aexp -> Aexp -> a) ->
+			(Aexp -> Aexp -> a) ->
+			(a-> a) ->
+			(a-> a-> a) ->
+			Bexp ->
+			a
+foldBexp t f eq le n a b = resolver b
+	where
+		resolver TRUE = t
+		resolver FALSE = f
+		resolver (Eq e1 e2) = eq e1 e2
+		resolver (Le e1 e2) = le e1 e2
+		resolver (Neg e) = n (resolver e)
+		resolver (And e1 e2) = a (resolver e1) (resolver e2)
 bVal' :: Bexp -> State -> Bool
-bVal' = undefined
+bVal' b s = foldBexp True False (\x1 x2 -> aVal' x1 s == aVal' x2 s) (\x1 x2 -> aVal' x1 s < aVal' x2 s) (\x -> not x) (\x1 x2 -> x1 && x2) b
 
 fvBexp' :: Bexp -> [Var]
-fvBexp' = undefined
+fvBexp' = foldBexp [] [] (\x1 x2 -> nub $ fvAexp' x1 ++ fvAexp' x2) (\x1 x2 -> nub $ fvAexp' x1 ++ fvAexp' x2) (\x1 -> x1) (\x1 x2 -> nub $ x1 ++ x2)
 
 substBexp' :: Bexp -> Subst -> Bexp
-substBexp' = undefined
+substBexp' e s = foldBexp TRUE FALSE (\x1 x2 -> (Eq (substAexp' x1 s) (substAexp' x2 s) ) ) (\x1 x2 -> (Le (substAexp' x1 s) (substAexp' x2 s) )) (\x -> (Neg x) ) (\x1 x2 -> (And x1 x2) ) e
 
 
