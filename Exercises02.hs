@@ -51,7 +51,7 @@ import Data.List
 
 showState :: State -> [Var] -> [String]
 showState s [] = []
-showState s (x:xs) = ["x -> " ++ (show $ s x)] ++ showState s xs
+showState s (x:xs) = [x ++ " -> " ++ (show $ s x)] ++ showState s xs
 
 -- | Test your function with HUnit.
 
@@ -86,11 +86,15 @@ testFvStm = test["fvStm factorial" ~: ["y", "x"] ~=? fvStm factorial]
 -- |  showFinalState factorial sInit = ["y->6","x->1"]
 
 showFinalState :: Stm -> State -> [String]
-showFinalState st s = undefined
+showFinalState st s = showState s' vars
+	where
+		s' = sNs st s
+		vars = fvStm st
 
 -- | Test your function with HUnit. Beware the order or appearance.
 
-
+testShowFinalState :: Test
+testShowFinalState = test ["showFinalState factorial sInit" ~: ["y -> 6","x -> 1"] ~=? showFinalState factorial sInit]
 -- |----------------------------------------------------------------------
 -- | Exercise 2
 -- |----------------------------------------------------------------------
