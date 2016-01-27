@@ -61,6 +61,15 @@ nsStm (Inter (While b ss) s)
 nsStm (Inter (While b ss) s)
    | not(bVal b s) = Final s
 
+nsStm (Inter (Repeat st b) s)
+  | not (bVal b s') = nsStm (Inter (Repeat st b) s')
+    where 
+      Final s' = nsStm (Inter st s)
+
+nsStm (Inter (Repeat st b) s)
+  | bVal b s' = Final s'
+    where
+      Final s' = nsStm (Inter st s)
 -- semantic function for natural semantics
 sNs :: Stm -> State -> State
 sNs ss s = s'

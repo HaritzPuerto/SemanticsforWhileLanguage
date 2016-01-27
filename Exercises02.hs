@@ -72,6 +72,7 @@ fvStm (Ass v a) = nub $ v:(fvAexp' a)
 fvStm (Comp s1 s2) = nub $ (fvStm s1) ++ (fvStm s2)
 fvStm (If b s1 s2) = nub $ (fvBexp' b) ++ (fvStm s1) ++ (fvStm s2)
 fvStm (While b s) = nub $ (fvBexp' b) ++ (fvStm s)
+fvStm (Repeat s b) = nub $ (fvStm s) ++  (fvBexp' b)
 
 -- | Test your function with HUnit. Beware the order or appearance.
 testFvStm :: Test
@@ -133,6 +134,14 @@ power = undefined -- WHILE statement to compute z = x^y
 -- | 'nsStm' (in module NaturalSemantics.hs) to include the 'repeat S until b'
 -- | construct. Write a couple of WHILE programs that use the 'repeat' statement
 -- | and test your functions with HUnit.
+sum3 :: Stm 
+sum3 = Comp (Ass "x" (N 0))
+             (Repeat 
+              (Ass "x" (Add (V "x") (N 1))) (Eq (V "x") (N 3)))
+
+
+testSum3 :: Test
+testSum3 = test ["sum3 sInit --> x = 3"  ~: ["x -> 3"] ~=? showFinalState sum3 sInit]
 
 
 -- |----------------------------------------------------------------------
