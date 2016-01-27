@@ -158,13 +158,59 @@ testSum3 = test ["sum3 sInit --> x = 3"  ~: ["x -> 3"] ~=? showFinalState sum3 s
 -- data ConfigAExp = ...
 
 -- representation of the transition relation <A, s> -> s'
+data ConfigAexp = NonTerminal Aexp State 
+	   			| Terminal Z
 
-nsAexp :: Config -> Config
-nsAexp = undefined
+nsAexp :: ConfigAexp -> ConfigAexp
+nsAexp (NonTerminal (N n) _) = Terminal n
+nsAexp (NonTerminal (V x) s) = Terminal (s x)
+nsAexp (NonTerminal (Add x y) s) = Terminal z
+	where
+		Terminal z1 = nsAexp (NonTerminal x s)
+		Terminal z2 = nsAexp (NonTerminal y s) 
+		z = z1 + z2
+nsAexp (NonTerminal (Mult x y) s) = Terminal z
+	where
+		Terminal z1 = nsAexp (NonTerminal x s) 
+		Terminal z2 = nsAexp (NonTerminal y s)
+		z = z1 * z2
+nsAexp (NonTerminal (Sub x y) s) = Terminal z
+	where
+		Terminal z1 = nsAexp (NonTerminal x s)
+		Terminal z2 = nsAexp (NonTerminal y s)
+		z = z1 - z2
 
+aNs ::  Aexp -> State -> Z
+aNs x s = s'
+  where Terminal s' = nsAexp (NonTerminal x s)
 -- | Test your function with HUnit. Inspect the final states of at least
 -- | four different evaluations.
 
+stateInvar::State
+stateInvar "x" = 9
+stateInvar _   = 0
+
+aexp1 :: Aexp
+aexp1 = (Add (V "x") (N 1))
+
+aexp2 :: Aexp
+aexp2 = (N 1)
+
+aexp3 :: Aexp
+aexp3 = (Add (Mult (N 1) (N 2)) (V "x"))
+
+aexp4 :: Aexp 
+aexp4 = (Mult (N 10) (N 2))
+
+
+
+testAexps :: Test
+testAexps = test ["aexp1  = 10"  ~: 10 ~=? aNs aexp1 stateInvar,
+                  "aexp2 = 1"    ~: 1 ~=? aNs aexp2 stateInvar,
+                  "aexp3 = 2+9"  ~: 11 ~=? aNs aexp3 stateInvar,
+                  "aexp4 = 20"   ~: 20 ~=? aNs aexp4 stateInvar,
+                  "aNs (Sub (N 5) (N 5)) sInit = 0" ~: 0 ~=? aNs (Sub (N 5) (N 5)) sInit
+                  ]
 
 -- |----------------------------------------------------------------------
 -- | Exercise 5
