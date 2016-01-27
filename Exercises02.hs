@@ -16,6 +16,7 @@ import While
 import NaturalSemantics
 import Exercises01
 import Test.HUnit hiding (State)
+import Data.List
 
 -- |----------------------------------------------------------------------
 -- | Exercise 1
@@ -49,10 +50,13 @@ import Test.HUnit hiding (State)
 -- |    showState s ["y", "z", "x"] = ["y -> 6", "z -> 0", "x -> 1"]
 
 showState :: State -> [Var] -> [String]
-showState s = undefined
+showState s [] = []
+showState s (x:xs) = ["x -> " ++ (show $ s x)] ++ showState s xs
 
 -- | Test your function with HUnit.
 
+testShowState :: Test
+testShowState = test["showState sInit x" ~: ["x -> 3"] ~=? showState sInit ["x"]]
 
 -- | Exercise 1.2
 -- | Define a function 'fvStm' that returns the free variables of a WHILE
@@ -63,7 +67,11 @@ showState s = undefined
 -- | Note: the order of appearance is not relevant.
 
 fvStm :: Stm -> [Var]
-fvStm st = undefined
+fvStm (Skip) = []
+fvStm (Ass v a) = nub $ v:(fvAexp' a)
+fvStm (Comp s1 s2) = nub $ (fvStm s1) ++ (fvStm s2)
+fvStm (If b s1 s2) = nub $ (fvBexp' b) ++ (fvStm s1) ++ (fvStm s2)
+fvStm (While b s) = nub $ (fvBexp' b) ++ (fvStm s)
 
 -- | Test your function with HUnit. Beware the order or appearance.
 
