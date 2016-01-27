@@ -177,7 +177,7 @@ substBexp (And b bb) subs = (And (substBexp b subs) (substBexp bb subs))
 
 -- | Test your function with HUnit.
 testsubstBexp :: Test
-testsubstBexp = test ["TRUE [y:->:x]" ~: TRUE ~=? substBexp TRUE ("y":->: (V "x")),
+testsubstBexp = test ["sInit [y:->:x]" ~: TRUE ~=? substBexp TRUE ("y":->: (V "x")),
 					  "FALSE [y:->:x]" ~: FALSE ~=? substBexp FALSE ("y":->: (V "x")),
 					  "(a1 == a2) [y:->:x]" ~: (Eq (V "x") (N 5) ) ~=? substBexp (Eq (V "y") (N 5) ) ("y":->: (V "x")),
 					  "(a1 < a2) [y:->:x]" ~: (Le (V "x") (N 5) ) ~=? substBexp (Le (V "y") (N 5) ) ("y":->: (V "x")),
@@ -192,17 +192,20 @@ testsubstBexp = test ["TRUE [y:->:x]" ~: TRUE ~=? substBexp TRUE ("y":->: (V "x"
 
 data Update = Var :=>: Z
 
--- | define a function 'update' that takes a state 's' and an update 'x :=> v'
+-- | define a function 'update' that takes a state 's' and an update 'x :=>: v'
 -- | and returns the updated state 's [x :=> y]'
 
 update :: State -> Update -> State
-update = undefined
+update s (x :=>: v) y
+	| x == y = v
+	| otherwise = s y
 
--- | Test your function with HUnit.
+testUpdate :: Test
+testUpdate = test ["sInit [x:=>:5]" ~: 5 ~=? (update sInit ("x":=>: 5)) "x",
+					  "sInit [y:=>:5]" ~: 3 ~=? (update sInit ("y":=>: 5)) "x"]
+					  
 
--- todo
-
--- | Define a fuunction 'updates' that takes a state 's' and a list of updates
+-- | Define a function 'updates' that takes a state 's' and a list of updates
 -- | 'us' and returns the updated states resulting from applying the updates
 -- | in 'us' from head to tail. For example:
 -- |
@@ -211,27 +214,45 @@ update = undefined
 -- | returns a state that binds "x" to 3 (the most recent update for "x").
 
 updates :: State ->  [Update] -> State
-updates = undefined
+updates s [] = s
+updates s (x:xs) = updates (update s x) xs
 
 -- |----------------------------------------------------------------------
 -- | Exercise 5
 -- |----------------------------------------------------------------------
 -- | Define a function 'foldAexp' to fold an arithmetic expression
 
-foldAexp :: a
-foldAexp = undefined
+foldAexp :: (Integer -> a) ->
+			(Var -> a) ->
+			(a -> a -> a) ->
+			(a -> a -> a) ->
+			(a -> a -> a) ->
+			Aexp ->
+			a
+foldAexp n v a m s exp = resolver exp
+	where
+		resolver (N const) = n const
+		resolver (V x) = v x
+		resolver (Add e1 e2) = a (resolver e1)  (resolver e2)
+		resolver (Mult e1 e2) = m (resolver e1) (resolver e2)
+		resolver (Sub e1 e2) = s (resolver e1) (resolver e2)
 
 -- | Use 'foldAexp' to fefine the functions 'aVal'', 'fvAexp'', and 'substAexp''
 -- | and test your definitions with HUnit.
-
 aVal' :: Aexp -> State -> Z
-aVal' = undefined
+aVal' e s = foldAexp (\n -> n) (\x -> s x) (\x1 x2 -> x1 + x2) (\x1 x2 -> x1 * x2) (\x1 x2 -> x1 - x2) e
 
 fvAexp' :: Aexp -> [Var]
-fvAexp' = undefined
+fvAexp' = foldAexp (\x -> []) (\x -> [x]) (\x1 x2 -> nub $  x1 ++ x2) (\x1 x2 -> nub $  x1 ++ x2) (\x1 x2 -> nub $  x1 ++ x2)
+
 
 substAexp' :: Aexp -> Subst -> Aexp
-substAexp' = undefined
+substAexp' e s = foldAexp (\x -> (N x)) (subsVar s) (\x1 x2 -> (Add x1 x2)) (\x1 x2 -> (Mult x1 x2)) (\x1 x2 -> (Sub x1 x2)) e
+
+subsVar :: Subst -> Var -> Aexp
+subsVar (y:->:a0) x
+	| x == y = a0
+	| otherwise = (V x)
 
 -- | Define a function 'foldBexp' to fold a Boolean expression and use it
 -- | to define the functions 'bVal'', 'fvBexp'', and 'substAexp''. Test
