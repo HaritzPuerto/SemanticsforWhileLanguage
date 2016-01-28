@@ -1,0 +1,33 @@
+*Exercises03> showAexpSeq exp1 sExp
+Add (Add (V "x") (V "y")) (V "z")
+ s(x)= 1
+ s(y)= 2
+ s(z)= 3
+
+Add (Add (N 1) (V "y")) (V "z")
+ s(x)= 1
+ s(y)= 2
+ s(z)= 3
+
+Add (Add (N 1) (N 2)) (V "z")
+ s(x)= 1
+ s(y)= 2
+ s(z)= 3
+
+Add (N 3) (V "z")
+ s(x)= 1
+ s(y)= 2
+ s(z)= 3
+
+Add (N 3) (N 3)
+ s(x)= 1
+ s(y)= 2
+ s(z)= 3
+
+N 6
+ s(x)= 1
+ s(y)= 2
+ s(z)= 3
+
+Final value:
+6

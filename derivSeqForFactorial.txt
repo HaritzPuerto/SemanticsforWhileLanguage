@@ -1,0 +1,53 @@
+*Exercises03> showFacSeq
+Comp (Ass "y" (N 1)) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 0
+
+While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1))))
+ s(x)= 3
+ s(y)= 1
+
+If (Neg (Eq (V "x") (N 1))) (Comp (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))) Skip
+ s(x)= 3
+ s(y)= 1
+
+Comp (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 1
+
+Comp (Ass "x" (Sub (V "x") (N 1))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))
+ s(x)= 3
+ s(y)= 3
+
+While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1))))
+ s(x)= 2
+ s(y)= 3
+
+If (Neg (Eq (V "x") (N 1))) (Comp (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))) Skip
+ s(x)= 2
+ s(y)= 3
+
+Comp (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))
+ s(x)= 2
+ s(y)= 3
+
+Comp (Ass "x" (Sub (V "x") (N 1))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))
+ s(x)= 2
+ s(y)= 6
+
+While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1))))
+ s(x)= 1
+ s(y)= 6
+
+If (Neg (Eq (V "x") (N 1))) (Comp (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))) (While (Neg (Eq (V "x") (N 1))) (Comp (Ass "y" (Mult (V "y") (V "x"))) (Ass "x" (Sub (V "x") (N 1)))))) Skip
+ s(x)= 1
+ s(y)= 6
+
+Skip
+ s(x)= 1
+ s(y)= 6
+
+Final state:
+ s(x)= 1
+ s(y)= 6
+
