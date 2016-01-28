@@ -228,6 +228,8 @@ data DerivTree = AssNS     Transition
                | IfFFNS    Transition DerivTree
                | WhileTTNS Transition DerivTree DerivTree
                | WhileFFNS Transition
+               | RepeatTTNS Transition DerivTree 
+               | RepeatFFNS Transition DerivTree DerivTree
 
 -- | and the function 'getFinalState' to access the final state of the root
 -- | of a derivation tree:
@@ -240,9 +242,27 @@ getFinalState (IfTTNS (_ :-->: s) _ ) = s
 getFinalState (IfFFNS (_ :-->: s) _ ) = s
 getFinalState (WhileTTNS (_ :-->: s) _ _ ) = s
 getFinalState (WhileFFNS (_ :-->: s)) = s
+getFinalState (RepeatTTNS (_ :-->: s) _) = s
+getFinalState (RepeatFFNS (_ :-->: s) _ _) = s
+
 
 -- | Define a function 'nsDeriv' that given a WHILE statement 'st' and an
 -- | initial state 's' returns corresponding derivation tree.
 
 nsDeriv :: Stm -> State -> DerivTree
-nsDeriv st s = undefined
+nsDeriv Skip s = SkipNS ((Inter Skip s) :-->: s)
+nsDeriv (Ass v a) s = AssNS ((Inter (Ass v a) s) :-->: (sNs (Ass v a) s))
+nsDeriv (Comp s1 s2) s = CompNS ( (Inter (Comp s1 s2) s) :-->: (sNs (Comp s1 s2) s))  (nsDeriv s1 s) (nsDeriv s2 s)
+nsDeriv (If b s1 s2) s 
+	| bVal b s = IfTTNS ( (Inter (If b s1 s2) s) :-->: (sNs (If b s1 s2) s)) (nsDeriv s1 s)
+	| otherwise = IfFFNS ( (Inter (If b s1 s2) s) :-->: (sNs (If b s1 s2) s)) (nsDeriv s2 s)
+nsDeriv (While b st) s 
+	| bVal b s = WhileTTNS ((Inter (While b st) s ) :-->: (sNs (While b st) s)) (nsDeriv st s) (nsDeriv (While b st) s)
+	| otherwise = WhileFFNS ((Inter (While b st) s ) :-->: (sNs (While b st) s))
+nsDeriv (Repeat st b) s
+	| bVal b s' = RepeatTTNS ((Inter (Repeat st b) s) :-->: s') (nsDeriv st s)
+	| otherwise = RepeatFFNS ((Inter (Repeat st b) s) :-->: (sNs (Repeat st b) s')) (nsDeriv st s) (nsDeriv (Repeat st b) s')
+	where
+		s' = sNs st s
+
+
