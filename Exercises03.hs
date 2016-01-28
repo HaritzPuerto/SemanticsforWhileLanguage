@@ -83,7 +83,7 @@ sFac' = sSos factorial sInit
 {- Formal definition of 'repeat S until b'
 
 
-        [repeat-sos]  ------------------------------   ¿condition?
+        [repeat-sos] <repeat S until b, s> => <S; if !b repeat S until b else Skip, s>
 
 -}
 
@@ -96,7 +96,28 @@ sFac' = sSos factorial sInit
 
 -- | Exercise 2.3
 -- | Write a WHILE program to test your definition of the repeat statement.
+sum3 :: Stm 
+sum3 = Comp (Ass "x" (N 0))
+             (Repeat 
+              (Ass "x" (Add (V "x") (N 1))) (Eq (V "x") (N 3)))
 
+
+factorial2 :: Stm
+factorial2 = Comp (Ass "y" (N 1))
+                 (Repeat 
+                    (Comp (Ass "y" (Mult (V "y") (V "x")))
+                          (Ass "x" (Sub (V "x") (N 1))))
+                    ( (Eq (V "x") (N 1))))
+facSeq2 :: DerivSeq
+facSeq2 = derivSeq factorial2 sInit
+
+showFacSeq2 :: IO()
+showFacSeq2 = putStrLn $ showDerivSeq ["x", "y"] facSeq2
+
+sum3Seq :: DerivSeq
+sum3Seq = derivSeq sum3 sInit
+
+showSum3Seq = putStrLn $ showDerivSeq ["x"] sum3Seq
 
 
 -- |----------------------------------------------------------------------

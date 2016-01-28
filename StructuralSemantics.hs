@@ -66,3 +66,6 @@ sosStm (Inter (While b st) s) = Inter (If b (Comp st (While b st)) Skip) s
 -- abort
 
 sosStm (Inter Abort s) = Inter Abort s
+
+-- repeat S until b
+sosStm (Inter (Repeat st b) s) = Inter (Comp st (If (Neg b) (Repeat st b) Skip)) s
