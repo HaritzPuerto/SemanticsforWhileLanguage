@@ -5,7 +5,7 @@
 -- An implementation of appendix C of
 -- [Nielson and Nielson, semantics with applications]
 --
--- Author:
+-- Author: Haritz Puerto-San-Roman
 --
 -- -------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ isFinal :: Config -> Bool
 isFinal (Inter ss s) = False
 isFinal (Final s)    = True
 
--- representation of the transition relation <S, s> -> s'
+-- representation of the transition relation <S, s> => s'
 
 sosStm :: Config -> Config
 
@@ -61,8 +61,8 @@ sosStm (Inter (If b ss1 ss2) s)
 
 -- while b do s
 
--- todo
+sosStm (Inter (While b st) s) = Inter (If b (Comp st (While b st)) Skip) s
 
 -- abort
 
--- todo
+sosStm (Inter Abort s) = Inter Abort s
