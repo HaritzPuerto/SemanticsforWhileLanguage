@@ -28,8 +28,11 @@ type DerivSeq = [Config]
 -- | initial state 's' returns the corresponding derivation sequence:
 
 derivSeq :: Stm -> State -> DerivSeq
-derivSeq st ini = undefined
-
+derivSeq st ini
+  | isFinal (sosStm (Inter st ini)) =  [Inter st ini] ++ [sosStm (Inter st ini)]
+  | otherwise = [Inter st ini] ++ (derivSeq st' s')
+    where
+      (Inter st' s') = sosStm (Inter st ini)
 -- | To test your definition of 'derivSeq' you can use the code below.
 -- | The function 'facSeq' returns the derivation sequence of the 'factorial'
 -- | statement executed from the initial state 'sInit':
