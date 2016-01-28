@@ -138,13 +138,17 @@ showSum3Seq = putStrLn $ showDerivSeq ["x"] sum3Seq
 -- | that it deals with stuck configurations.
 
 derivSeqAbort :: Stm -> State -> DerivSeq
-derivSeqAbort st ini = undefined
-
+derivSeqAbort Abort ini = [Final ini]
+derivSeqAbort st ini 
+  | isFinal (sosStm (Inter st ini)) =  [Inter st ini] ++ [sosStm (Inter st ini)]
+  | otherwise = [Inter st ini] ++ (derivSeq st' s')
+    where
+      (Inter st' s') = sosStm (Inter st ini)
 -- | You can test your code with the examples below and the function
 -- | 'showAbortSeq':
 
 showAbortSeq :: IO()
-showAbortSeq = putStrLn $ showDerivSeq ["x", "y"] (derivSeqAbort abortExample0 sInit)
+showAbortSeq = putStrLn $ showDerivSeq ["x", "y"] (derivSeqAbort abortExample1 sInit)
 
 abortExample0 :: Stm
 abortExample0 = Abort
