@@ -70,6 +70,16 @@ nsStm (Inter (Repeat st b) s)
   | bVal b s' = Final s'
     where
       Final s' = nsStm (Inter st s)
+
+nsStm (Inter (For x a1 a2 stm) s)
+  | (aVal a1 s) > (aVal a2 s) = Final s
+  | (aVal a1 s) <= (aVal a2 s) = nsStm (Inter (For x a1' a2 stm) s'')
+    where
+      Final s' = nsStm (Inter (Ass x a1) s)
+      Final s'' = nsStm (Inter stm s')
+      newX = s'' x
+      a1' = N (newX + 1)
+
 -- semantic function for natural semantics
 sNs :: Stm -> State -> State
 sNs ss s = s'

@@ -73,6 +73,7 @@ fvStm (Comp s1 s2) = nub $ (fvStm s1) ++ (fvStm s2)
 fvStm (If b s1 s2) = nub $ (fvBexp' b) ++ (fvStm s1) ++ (fvStm s2)
 fvStm (While b s) = nub $ (fvBexp' b) ++ (fvStm s)
 fvStm (Repeat s b) = nub $ (fvStm s) ++  (fvBexp' b)
+fvStm (For x a1 a2 stm) = nub $ ["x"] ++ (fvAexp a1) ++ (fvAexp a2 ) ++ (fvStm stm)
 
 -- | Test your function with HUnit. Beware the order or appearance.
 testFvStm :: Test
@@ -143,7 +144,12 @@ sum3 = Comp (Ass "x" (N 0))
 testSum3 :: Test
 testSum3 = test ["sum3 sInit --> x = 3"  ~: ["x -> 3"] ~=? showFinalState sum3 sInit]
 
+-- |----------------------------------------------------------------------
+-- | TEST for x:= a1 to a2 do S
+-- |----------------------------------------------------------------------
 
+testFor :: Test
+testFor = test ["for x:=1 to 5 skip --> x = 5"  ~: ["x -> 5"] ~=? showFinalState exampleFor sInit]
 -- |----------------------------------------------------------------------
 -- | Exercise 4
 -- |----------------------------------------------------------------------

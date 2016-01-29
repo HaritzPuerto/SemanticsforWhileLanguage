@@ -36,6 +36,7 @@ data  Stm   =  Ass Var Aexp
             |  If Bexp Stm Stm
             |  While Bexp Stm
             |  Repeat Stm Bexp
+            |  For Var Aexp Aexp Stm 
             |  Abort
             deriving Show
 
@@ -48,6 +49,9 @@ factorial = Comp (Ass "y" (N 1))
                           (Ass "x" (Sub (V "x") (N 1)))))
 
 -- End Example B.1
+
+exampleFor :: Stm
+exampleFor = For "x" (N 1) (N 5) Skip
 
 ---------------------------------------------------------------------
 -- Secion B.2  Evaluation of expressions
