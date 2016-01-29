@@ -390,6 +390,14 @@ showConfigs = map showConfig
      showConfig (Value n) = show n
 
 
+
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+-- Parallel Structural Operational Semantics for Aexp
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
 sosAexp' :: AexpConfig -> [AexpConfig]
 
 -- n
@@ -414,3 +422,115 @@ sosAexp' (Redex (Mult a1 a2) s) = [Redex (Mult a1' a2) s | (Redex a1' _) <- sosA
 sosAexp' (Redex (Sub (N n1) (N n2)) s) = [Redex (N (n1 + n2)) s]
 
 sosAexp' (Redex (Sub a1 a2) s) = [Redex (Sub a1' a2) s | (Redex a1' _) <- sosAexp' (Redex a1 s)] ++ [Redex (Sub a1 a2') s | (Redex a2' _) <- sosAexp' (Redex a2 s)]
+
+
+
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+-- Structural Operational Semantics for Bexp
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+data BexpConfig = RedexB Bexp State  -- a redex is a reducible expression
+                | ValueB Bool           -- a value is not reducible; it is in normal form
+
+sosBexp :: BexpConfig -> BexpConfig
+sosBexp (RedexB TRUE _) = ValueB True
+sosBexp (RedexB FALSE _) = ValueB False
+
+sosBexp (RedexB (Eq a1 a2) s) 
+  | (aVal a1 s) == (aVal a2 s) = RedexB TRUE s
+  | otherwise = RedexB FALSE s
+
+
+sosBexp (RedexB (Le a1 a2) s) 
+  | (aVal a1 s) <= (aVal a2 s) =  RedexB TRUE s
+  | otherwise = RedexB FALSE s
+
+
+sosBexp (RedexB (Neg TRUE) s) = RedexB FALSE s
+sosBexp (RedexB (Neg FALSE) s) = RedexB TRUE s
+
+
+sosBexp (RedexB (Neg b) s) = RedexB (Neg b') s
+  where 
+    RedexB b' s= sosBexp (RedexB b s) -- It cannot be a ValueB because we have the previous rule
+
+
+sosBexp (RedexB (And TRUE b2) s) = RedexB b2 s
+
+sosBexp (RedexB (And FALSE b2) s) = RedexB FALSE s
+
+sosBexp (RedexB (And b1 b2) s) = RedexB (And b1' b2) s
+  where
+    RedexB b1' s = sosBexp (RedexB b1 s)
+
+-- | Given the type synonym 'BexpDerivSeq' to represent derivation sequences
+-- | of the structural operational semantics for arithmetic expressions 'Bexp':
+
+type BexpDerivSeq = [BexpConfig]
+
+-- | Define a function 'aExpDerivSeq' that given a 'Bexp' expression 'b' and an
+-- | initial state 's' returns the corresponding derivation sequence:
+
+bExpDerivSeq :: Bexp -> State -> BexpDerivSeq
+bExpDerivSeq TRUE s = (RedexB TRUE s):[sosBexp (RedexB TRUE s)]
+bExpDerivSeq FALSE s = (RedexB FALSE s):[sosBexp (RedexB FALSE s)]
+
+bExpDerivSeq (Eq e1 e2) s = (RedexB (Eq e1 e2) s):(bExpDerivSeq a' s')
+  where
+    RedexB a' s' = sosBexp (RedexB (Eq e1 e2) s)
+
+bExpDerivSeq (Le e1 e2) s = (RedexB (Le e1 e2) s):(bExpDerivSeq a' s')
+  where
+    RedexB a' s' = sosBexp (RedexB (Le e1 e2) s)
+
+bExpDerivSeq b s = (RedexB b s):(bExpDerivSeq b' s')
+  where
+    RedexB b' s' = sosBexp (RedexB b s)
+
+-- | To test your code, you can use the function 'showBexpDerivSeq' that
+-- | returns a String representation  of a derivation sequence 'dseq':
+
+showBexpDerivSeq :: [Var] -> BexpDerivSeq -> String
+showBexpDerivSeq vars dseq = unlines (map showConfig dseq)
+  where
+    showConfig (ValueB n) = "Final value:\n" ++ show n
+    showConfig (RedexB ss s) = show ss ++ "\n" ++ unlines (map (showVal s) vars)
+    showVal s x = " s(" ++ x ++ ")= " ++ show (s x)
+
+-- | Therefore, you can print the derivation sequence of an 'Bexp' with:
+
+bexp1 :: Bexp
+bexp1 = TRUE
+
+bexp2 :: Bexp
+bexp2 = FALSE
+
+bexp3 :: Bexp
+bexp3 = (Eq (N 1) (N 1))
+
+bexp4 :: Bexp
+bexp4 = (Eq (N 1) (N 2))
+
+bexp5 :: Bexp
+bexp5 = (Le (N 1) (N 2))
+
+bexp6 :: Bexp
+bexp6 = (Le (N 2) (N 1))
+
+bexp7 :: Bexp
+bexp7 = (Neg bexp6)
+
+bexp8 :: Bexp
+bexp8 = (And bexp3 bexp5)
+
+showBexpSeq :: Bexp -> State -> IO()
+showBexpSeq b s = putStrLn $ showBexpDerivSeq [] (bExpDerivSeq b s)
+
+
+-- | Test you code printing derivation sequences for the expressions above as follows:
+
+showBexp4 :: IO ()
+showBexp4 = showBexpSeq bexp8 sExp
