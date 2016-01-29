@@ -69,3 +69,14 @@ sosStm (Inter Abort s) = Inter Abort s
 
 -- repeat S until b
 sosStm (Inter (Repeat st b) s) = Inter (Comp st (If (Neg b) (Repeat st b) Skip)) s
+
+-- <x:= a1, s> => s'
+-- ---------------------------------------------------------------------------
+-- <for x:= a1 to a2 do stm, s> => <stm; For x:= x+1 to a2 do stm, s'>
+
+sosStm (Inter (For x a1 a2 stm) s) 
+  | (aVal a1 s) > (aVal a2 s) = Final s
+  | (aVal a1 s) <= (aVal a2 s) = sosStm (Inter (Comp stm (For x a1' a2 stm)) s')
+    where
+      a1' = Add (V "x") (N 1)
+      Final s' = sosStm (Inter (Ass "x" a1) s)
