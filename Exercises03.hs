@@ -227,25 +227,43 @@ data AexpConfig = Redex Aexp State  -- a redex is a reducible expression
 sosAexp :: AexpConfig -> AexpConfig
 
 -- n
-sosAexp (Redex (N n) _) = undefined
+sosAexp (Redex (N n) _) = Value n
 
 -- x
-sosAexp (Redex (V x) s) = undefined
+sosAexp (Redex (V x) s) = Redex (N (s x)) s
 
 -- a1 + a2
-sosAexp (Redex (Add (N n1) (N n2)) s) =  undefined
+sosAexp (Redex (Add (N n1) (N n2)) s) =  Redex (N (n1 + n2)) s
 
-sosAexp (Redex (Add (N n) a2) s) = undefined
+sosAexp (Redex (Add (N n) a2) s) = Redex (Add (N n) a2') s'
+  where
+    Redex a2' s' = sosAexp (Redex a2 s)
 
-sosAexp (Redex (Add a1 a2) s) = undefined
+sosAexp (Redex (Add a1 a2) s) = Redex (Add a1' a2) s'
+  where
+    Redex a1' s' = sosAexp (Redex a1 s)
 
 -- a1 * a2
+sosAexp (Redex (Mult (N n1) (N n2)) s) =  Redex (N (n1 + n2)) s
 
--- todo
+sosAexp (Redex (Mult (N n) a2) s) = Redex (Mult (N n) a2') s'
+  where
+    Redex a2' s' = sosAexp (Redex a2 s)
 
+sosAexp (Redex (Mult a1 a2) s) = Redex (Mult a1' a2) s'
+  where
+    Redex a1' s' = sosAexp (Redex a1 s)
 -- a1 - a2
 
--- todo
+sosAexp (Redex (Sub (N n1) (N n2)) s) =  Redex (N (n1 + n2)) s
+
+sosAexp (Redex (Sub (N n) a2) s) = Redex (Sub (N n) a2') s'
+  where
+    Redex a2' s' = sosAexp (Redex a2 s)
+
+sosAexp (Redex (Sub a1 a2) s) = Redex (Sub a1' a2) s'
+  where
+    Redex a1' s' = sosAexp (Redex a1 s)
 
 -- |----------------------------------------------------------------------
 -- | Exercise 4.2
@@ -260,7 +278,13 @@ type AexpDerivSeq = [AexpConfig]
 -- | initial state 's' returns the corresponding derivation sequence:
 
 aExpDerivSeq :: Aexp -> State -> AexpDerivSeq
-aExpDerivSeq a ini = undefined
+aExpDerivSeq (N n) s = (Redex (N n) s):[sosAexp (Redex (N n) s)]
+aExpDerivSeq (V x) s = (Redex (V x) s):(aExpDerivSeq a' s')
+  where
+    Redex a' s' = sosAexp (Redex (V x) s)
+aExpDerivSeq a s = (Redex a s):(aExpDerivSeq a' s')
+  where
+    Redex a' s' = sosAexp (Redex a s)
 
 -- | To test your code, you can use the function 'showAexpDerivSeq' that
 -- | returns a String representation  of a derivation sequence 'dseq':
