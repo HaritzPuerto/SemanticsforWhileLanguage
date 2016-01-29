@@ -385,20 +385,24 @@ showConfigs = map showConfig
 sosAexp' :: AexpConfig -> [AexpConfig]
 
 -- n
-sosAexp' (Redex (N n) _) = undefined
+sosAexp' (Redex (N n) _) = [Value n]
 
 -- x
-sosAexp' (Redex (V x) s) = undefined
+sosAexp' (Redex (V x) s) = sosAexp' (Redex (N (s x)) s)
 
 -- a1 + a2
-sosAexp' (Redex (Add (N n1) (N n2)) s) = undefined
+sosAexp' (Redex (Add (N n1) (N n2)) s) = [Redex (N (n1 + n2)) s]
 
-sosAexp' (Redex (Add a1 a2) s) = undefined
+sosAexp' (Redex (Add a1 a2) s) = [Redex (Add a1' a2) s | (Redex a1' _) <- sosAexp' (Redex a1 s)] ++ [Redex (Add a1 a2') s | (Redex a2' _) <- sosAexp' (Redex a2 s)]
 
 -- a1 * a2
 
--- todo
+sosAexp' (Redex (Mult (N n1) (N n2)) s) = [Redex (N (n1 + n2)) s]
+
+sosAexp' (Redex (Mult a1 a2) s) = [Redex (Mult a1' a2) s | (Redex a1' _) <- sosAexp' (Redex a1 s)] ++ [Redex (Mult a1 a2') s | (Redex a2' _) <- sosAexp' (Redex a2 s)]
 
 -- a1 - a2
 
--- todo
+sosAexp' (Redex (Sub (N n1) (N n2)) s) = [Redex (N (n1 + n2)) s]
+
+sosAexp' (Redex (Sub a1 a2) s) = [Redex (Sub a1' a2) s | (Redex a1' _) <- sosAexp' (Redex a1 s)] ++ [Redex (Sub a1 a2') s | (Redex a2' _) <- sosAexp' (Redex a2 s)]
