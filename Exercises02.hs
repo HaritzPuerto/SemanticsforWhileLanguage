@@ -271,4 +271,75 @@ nsDeriv (Repeat st b) s
 	where
 		s' = sNs st s
 
+--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+-- Natural semantics for Bexp
+--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+-- representation of the transition relation <A, s> -> s'
+data ConfigBexp = FinalConf Bool 
+	   			| NonFinalConf Bexp State
 
+nsBexp :: ConfigBexp -> ConfigBexp
+nsBexp (NonFinalConf TRUE _) = FinalConf True
+nsBexp (NonFinalConf FALSE _) = FinalConf False
+nsBexp (NonFinalConf (Eq a1 a2) s) 
+	| (aVal a1 s) == (aVal a2 s) = FinalConf True
+	| otherwise = FinalConf False
+
+nsBexp (NonFinalConf (Le a1 a2) s) 
+	| (aVal a1 s) <= (aVal a2 s) = FinalConf True
+	| otherwise = FinalConf False
+
+nsBexp (NonFinalConf (Neg b) s) 
+	| getBoolValue $ nsBexp (NonFinalConf b s) = FinalConf False
+	| otherwise = FinalConf True
+
+nsBexp (NonFinalConf (And b1 b2) s) 
+	| not $ getBoolValue (nsBexp(NonFinalConf b1 s)) = FinalConf False
+	| getBoolValue $ nsBexp (NonFinalConf b2 s) = FinalConf True -- b1 must be true to enter in this branch
+
+getBoolValue :: ConfigBexp -> Bool
+getBoolValue (FinalConf b) = b
+
+bNs ::  Bexp -> State -> Bool
+bNs b s = s'
+  where FinalConf s' = nsBexp (NonFinalConf b s)
+-- | Test your function with HUnit.
+
+bexp1 :: Bexp
+bexp1 = TRUE
+
+bexp2 :: Bexp
+bexp2 = FALSE
+
+bexp3 :: Bexp
+bexp3 = (Eq (N 1) (N 1))
+
+bexp4 :: Bexp
+bexp4 = (Eq (N 1) (N 2))
+
+bexp5 :: Bexp
+bexp5 = (Le (N 1) (N 2))
+
+bexp6 :: Bexp
+bexp6 = (Le (N 2) (N 1))
+
+bexp7 :: Bexp
+bexp7 = (Neg bexp6)
+
+bexp8 :: Bexp
+bexp8 = (And bexp3 bexp5)
+
+testBexps :: Test
+testBexps = test ["TRUE = true"  ~: True ~=? bNs bexp1 stateInvar,
+                  "FALSE = False"    ~: False ~=? bNs bexp2 stateInvar,
+                  "1 = 1"  ~: True ~=? bNs bexp3 stateInvar,
+                  "1 = 2"   ~: False ~=? bNs bexp4 stateInvar,
+                  "1 <= 2" ~: True ~=? bNs bexp5 stateInvar,
+                  "2 <= 1" ~: False ~=? bNs bexp6 stateInvar,
+                  "! 2 <= 1" ~: True ~=? bNs bexp7 stateInvar,
+                  "true && true" ~: True ~=? bNs bexp8 stateInvar
+                  ]
