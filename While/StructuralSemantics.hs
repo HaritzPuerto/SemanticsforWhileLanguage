@@ -97,3 +97,17 @@ sosStm (Inter (For x a1 a2 stm) s)
 sosStm (Inter (Assert b stm) s)
   | bVal b s = Inter stm s
   | otherwise = (Stuck (Assert b stm) s)
+
+
+-- Parallel Structural Operatinal Semantics for Whille lang.
+-- It will be used only by par statement
+
+sosStm' :: Config -> [Config]
+
+sosStm' (Inter (Par stm1 stm2) s)
+  | isFinal $ sosStm (Inter stm1 s) = [Inter stm2 finalS1]
+  | isFinal $ sosStm (Inter stm2 s) = [Inter stm1 finalS2]
+  | otherwise = [Inter (Par stm1' stm2) s' | (Inter stm1' s') <- [sosStm (Inter stm1 s)]] ++ [Inter (Par stm1 stm2') s' | (Inter stm2' s') <- [sosStm (Inter stm2 s)]]
+  where
+    Final finalS1 = sosStm (Inter stm1 s)
+    Final finalS2 = sosStm (Inter stm2 s)

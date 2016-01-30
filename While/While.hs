@@ -39,6 +39,7 @@ data  Stm   =  Ass Var Aexp
             |  For Var Aexp Aexp Stm 
             |  Abort
             |  Assert Bexp Stm -- Assert b before stm
+            |  Par Stm Stm
             deriving Show
 
 -- Example B.1
