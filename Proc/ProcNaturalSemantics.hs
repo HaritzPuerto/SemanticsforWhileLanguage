@@ -173,6 +173,8 @@ nsStm envV envP (Inter (Call p) sto) = Final sto'
 		(s, envV', envP') = envProc envP p
 		envP'' = updP (Proc p s EndProc)  envV' envP'
 
+
+-- For x:= a1 to a2 do S statement
 nsStm envV envP (Inter (For x a1 a2 stm) sto) 
 	| (aVal a1 (sto . envV)) <= (aVal a2 (sto . envV)) = Final finalSto
 	| otherwise = Final sto
@@ -182,6 +184,15 @@ nsStm envV envP (Inter (For x a1 a2 stm) sto)
 		Final sto'' = nsStm envV' envP (Inter (Ass x a1) sto') -- x := a1
 		Final sto''' = nsStm envV' envP (Inter stm sto'') -- execute the statement
 		Final finalSto = nsStm envV' envP (Inter (For x (Add (V x) (N 1)) a2 stm) sto''') -- for x := x +1 to a2 do stm
+
+
+-- Repeat S until b
+nsStm envV envP (Inter (Repeat stm b) sto) 
+	| bVal b (sto' . envV) = Final sto'
+	| otherwise = Final sto''
+		where
+			Final sto' = nsStm envV envP (Inter stm sto)
+			Final sto'' = nsStm envV envP (Inter (Repeat stm b) sto')
 
 -- | Exercise 3.2
 
