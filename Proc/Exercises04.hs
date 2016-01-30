@@ -322,6 +322,21 @@ execFactorial = showStore sto
 
 -}
 
+
+exampleFor :: Stm
+exampleFor = Block 
+              (Dec "y" (N 0) -- located at pos 1
+               EndDec)
+               EndProc
+               (For "x" (N 1) (N 5) (Ass "y" (V "x"))
+               )
+
+
+
+execFor = showStore sto
+  where
+    Final sto = nsStm initEnvV initEnvP (Inter exampleFor initStore)
+
 -- | Exercise 3.2
 
 -- | Complete the definition of the semantic function for PROC 'sNs' in

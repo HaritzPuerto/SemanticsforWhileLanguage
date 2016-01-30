@@ -173,6 +173,16 @@ nsStm envV envP (Inter (Call p) sto) = Final sto'
 		(s, envV', envP') = envProc envP p
 		envP'' = updP (Proc p s EndProc)  envV' envP'
 
+nsStm envV envP (Inter (For x a1 a2 stm) sto) 
+	| (aVal a1 (sto . envV)) <= (aVal a2 (sto . envV)) = Final finalSto
+	| otherwise = Final sto
+	where
+		decv = Dec x a1 EndDec 
+		FinalD envV' sto' = nsDecV (InterD decv envV sto) -- New scope for the for block
+		Final sto'' = nsStm envV' envP (Inter (Ass x a1) sto') -- x := a1
+		Final sto''' = nsStm envV' envP (Inter stm sto'') -- execute the statement
+		Final finalSto = nsStm envV' envP (Inter (For x (Add (V x) (N 1)) a2 stm) sto''') -- for x := x +1 to a2 do stm
+
 -- | Exercise 3.2
 
 sNs :: Stm -> Store -> Store

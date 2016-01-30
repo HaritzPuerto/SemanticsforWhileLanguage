@@ -49,6 +49,7 @@ data  Stm   =  Ass Var Aexp
             |  While Bexp Stm
             |  Block DecVar DecProc Stm
             |  Call Pname
+            |  For Var Aexp Aexp Stm -- For x:= a1 to a2 do S
             deriving Show
 
 -- Example B.1
