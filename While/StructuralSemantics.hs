@@ -17,10 +17,17 @@ import While
 
 data Config = Inter Stm State  -- <S, s>
             | Final State      -- s
+            | Stuck Stm State
 
 isFinal :: Config -> Bool
 isFinal (Inter ss s) = False
 isFinal (Final s)    = True
+isFinal (Stuck _ _) = False
+
+isStuck :: Config -> Bool
+isStuck (Inter ss s) = False
+isStuck (Final s)    = False
+isStuck (Stuck _ _) = True
 
 -- representation of the transition relation <S, s> => s'
 
@@ -65,7 +72,7 @@ sosStm (Inter (While b st) s) = Inter (If b (Comp st (While b st)) Skip) s
 
 -- abort
 
-sosStm (Inter Abort s) = Inter Abort s
+sosStm (Inter Abort s) = Stuck Abort s
 
 -- repeat S until b
 sosStm (Inter (Repeat st b) s) = Inter (Comp st (If (Neg b) (Repeat st b) Skip)) s
@@ -76,7 +83,17 @@ sosStm (Inter (Repeat st b) s) = Inter (Comp st (If (Neg b) (Repeat st b) Skip))
 
 sosStm (Inter (For x a1 a2 stm) s) 
   | (aVal a1 s) > (aVal a2 s) = Final s
-  | (aVal a1 s) <= (aVal a2 s) = sosStm (Inter (Comp stm (For x a1' a2 stm)) s')
+  | (aVal a1 s) <= (aVal a2 s) = Inter (Comp stm (For x a1' a2 stm)) s'
     where
       a1' = Add (V "x") (N 1)
       Final s' = sosStm (Inter (Ass "x" a1) s)
+
+
+-------------------------------------------------------------------------------
+-- <assert b before S, s> => <S,s> if B[b]s = tt otherwise stuck
+-------------------------------------------------------------------------------
+
+
+sosStm (Inter (Assert b stm) s)
+  | bVal b s = Inter stm s
+  | otherwise = (Stuck (Assert b stm) s)

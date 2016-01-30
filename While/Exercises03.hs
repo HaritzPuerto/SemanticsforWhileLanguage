@@ -138,17 +138,28 @@ showSum3Seq = putStrLn $ showDerivSeq ["x"] sum3Seq
 -- | that it deals with stuck configurations.
 
 derivSeqAbort :: Stm -> State -> DerivSeq
-derivSeqAbort Abort ini = [Final ini]
+derivSeqAbort Abort ini = [Stuck Abort ini]
 derivSeqAbort st ini 
+  | isStuck (sosStm (Inter st ini)) = [Stuck st ini]
   | isFinal (sosStm (Inter st ini)) =  [Inter st ini] ++ [sosStm (Inter st ini)]
   | otherwise = [Inter st ini] ++ (derivSeq st' s')
     where
       (Inter st' s') = sosStm (Inter st ini)
+
 -- | You can test your code with the examples below and the function
 -- | 'showAbortSeq':
 
+showDerivStuckSeq :: [Var] -> DerivSeq -> String
+showDerivStuckSeq vars dseq = unlines (map showConfig dseq)
+  where
+    showConfig (Stuck stm s) = "Stuck state: " ++ show stm ++ "\n" ++ unlines (showVars s vars)
+    showConfig (Final s) = "Final state:\n" ++ unlines (showVars s vars)
+    showConfig (Inter ss s) = show ss ++ "\n" ++ unlines (showVars s vars)
+    showVars s vs = map (showVal s) vs
+    showVal s x = " s(" ++ x ++ ")= " ++ show (s x)
+
 showAbortSeq :: IO()
-showAbortSeq = putStrLn $ showDerivSeq ["x", "y"] (derivSeqAbort abortExample1 sInit)
+showAbortSeq = putStrLn $ showDerivStuckSeq ["x", "y"] (derivSeqAbort abortExample0 sInit)
 
 abortExample0 :: Stm
 abortExample0 = Abort
@@ -179,6 +190,22 @@ abortExample3 = Comp (Ass "x" (N 1))
 
 showForSeq :: IO()
 showForSeq = putStrLn $ showDerivSeq ["x"] (derivSeqAbort exampleFor sInit)
+
+-- |----------------------------------------------------------------------
+-- | TEST assert True do S
+-- |----------------------------------------------------------------------
+
+exampleAssertTrue :: Stm
+exampleAssertTrue = Assert TRUE (Ass "x" (N 1))
+
+showAssertTrueSeq :: IO()
+showAssertTrueSeq = putStrLn $ showDerivStuckSeq ["x"] (derivSeqAbort exampleAssertTrue sInit)
+
+exampleAssertFalse :: Stm
+exampleAssertFalse = Assert FALSE (Ass "x" (N 1))
+
+showAssertFalseSeq :: IO()
+showAssertFalseSeq = putStrLn $ showDerivStuckSeq ["x"] (derivSeqAbort exampleAssertFalse sInit)
 
 -- |----------------------------------------------------------------------
 -- | Exercise 4
