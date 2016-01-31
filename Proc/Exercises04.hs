@@ -209,7 +209,7 @@ execProg2 =  showStore sto
 {-
 
 *Exercises04> execProg2
-[(1,5),(2,2),(3,5)]
+[(1,5),(2,5),(3,5),(4,2)]
 
 -}
 
