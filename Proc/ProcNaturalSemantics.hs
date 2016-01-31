@@ -79,22 +79,25 @@ nsDecV (InterD EndDec envV store) = FinalD envV store
 
 --                    p    s    snapshots    previous
 --                    |    |     /    \         |
-data EnvProc = EnvP Pname Stm EnvVar EnvProc EnvProc
+data EnvProc = EnvP Pname Stm EnvVar EnvProc EnvProc DecProc
              | EmptyEnvProc
 
 -- | Exercise 2.1
 
 -- update the procedure environment
 updP :: DecProc -> EnvVar -> EnvProc -> EnvProc
-updP (Proc p s procs) envV envP = updP procs envV (EnvP p s envV envP envP)
-updP EndProc envV envP = envP
+updP dp envV envP = updP' dp envV envP dp
+
+updP' :: DecProc -> EnvVar -> EnvProc -> DecProc -> EnvProc
+updP' (Proc p s procs) envV envP dp = updP' procs envV (EnvP p s envV envP envP dp) dp
+updP' EndProc envV envP dp = envP
 
 -- | Exercise 2.2
 
 -- lookup procedure p
-envProc :: EnvProc -> Pname -> (Stm, EnvVar, EnvProc)
-envProc (EnvP q s envV envP envs) p 
-	| p == q = (s, envV, envP)
+envProc :: EnvProc -> Pname -> (Stm, EnvVar, EnvProc, DecProc)
+envProc (EnvP q s envV envP envs dp) p 
+	| p == q = (s, envV, envP, dp)
 	| otherwise = envProc envs p
 envProc EmptyEnvProc p = error "undefined procedure"
 
@@ -170,8 +173,8 @@ nsStm envV envP (Inter (Call p) sto) = Final sto'
 nsStm envV envP (Inter (Call p) sto) = Final sto'
 	where
 		Final sto' = nsStm envV' envP'' (Inter s sto)
-		(s, envV', envP') = envProc envP p
-		envP'' = updP (Proc p s EndProc)  envV' envP'
+		(s, envV', envP', dp) = envProc envP p
+		envP'' = updP dp  envV' envP'
 
 
 -- For x:= a1 to a2 do S statement

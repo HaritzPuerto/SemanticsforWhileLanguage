@@ -123,43 +123,7 @@ var z loc 3 val 10
 initEnvP :: EnvProc
 initEnvP = EmptyEnvProc
 
--- | 'showDecP' shows the procedures declared in a 'DecProc', that is, the section
--- | of a block containing procedure declarations. For each procedure 'p', it shows
--- | the other procedures it knows (i.e., can be invoked from 'p').
 
-showDecP :: DecProc -> String
-showDecP procs =
-   showDecP' $ updP procs undefined EmptyEnvProc
-   where
-      showDecP' EmptyEnvProc = ""
-      showDecP' (EnvP p s envV envP envP') = p ++ " knows " ++ knows envP ++ "\n" ++ showDecP' envP'
-      knows EmptyEnvProc = ""
-      knows (EnvP p s envV envP envP') = p ++ " " ++ knows envP'
---      showDecP' (EnvP p s envV envP envP') = p ++ "\n" ++ showDecP' envP'
-
--- | Some procedure declarations:
-
-procedures :: DecProc
-procedures =  Proc "p" Skip
-             (Proc "q" Skip
-             (Proc "t" Skip
-              EndProc))
-
--- | Finally, a simple test for procedure declarations:
-
-testProcDec :: IO()
-testProcDec = putStr $ showDecP procedures
-
--- | And the expected output:
-
-{-
-
-*Exercises03> testProcDec
-t knows q p
-q knows p
-p knows
-
--}
 
 -- |----------------------------------------------------------------------
 -- | Exercise 3
@@ -195,25 +159,25 @@ prog1 = Block (Dec "x" (N 1)  -- located in 1
               (Dec "y" (N 1)  -- located in 2
                EndDec))
 
-               EndProc
+              (Proc "p" (If (Eq (V "x") (N 3)) Skip (Comp (Ass "x" (Add (V "x") (N 1)) ) (Call "q"))) -- if x == 3 skip else x+=1; call q
+              (Proc "q" (Call "p")
+              EndProc
+              ))
 
-               (While (Le (V "y") (N 5))
-                      (Comp (Ass "x" (Mult (V "x") (V "y")) )
-                            (Ass "y" (Add (V "y") (N 1)))
-                      )
-               )
-
+              (Call "p"
+              )
+-- expected output x=3
 -- | This runs 'prog1' and shows the final store:
 
 execProg1 =  showStore sto
   where Final sto = nsStm initEnvV initEnvP (Inter prog1 initStore)
 
--- | The expected output is:
+-- | The expected output is: x=3
 
 {-
 
 *Exercises04> execProg1
-[(1,120),(2,6)
+[(1,3),(2,1)]
 
 recall: x is located in 1, y is located in 2
 
