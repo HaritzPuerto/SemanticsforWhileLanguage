@@ -123,43 +123,7 @@ var z loc 3 val 10
 initEnvP :: EnvProc
 initEnvP = EmptyEnvProc
 
--- | 'showDecP' shows the procedures declared in a 'DecProc', that is, the section
--- | of a block containing procedure declarations. For each procedure 'p', it shows
--- | the other procedures it knows (i.e., can be invoked from 'p').
 
-showDecP :: DecProc -> String
-showDecP procs =
-   showDecP' $ updP procs undefined EmptyEnvProc
-   where
-      showDecP' EmptyEnvProc = ""
-      showDecP' (EnvP p s envV envP envP') = p ++ " knows " ++ knows envP ++ "\n" ++ showDecP' envP'
-      knows EmptyEnvProc = ""
-      knows (EnvP p s envV envP envP') = p ++ " " ++ knows envP'
---      showDecP' (EnvP p s envV envP envP') = p ++ "\n" ++ showDecP' envP'
-
--- | Some procedure declarations:
-
-procedures :: DecProc
-procedures =  Proc "p" Skip
-             (Proc "q" Skip
-             (Proc "t" Skip
-              EndProc))
-
--- | Finally, a simple test for procedure declarations:
-
-testProcDec :: IO()
-testProcDec = putStr $ showDecP procedures
-
--- | And the expected output:
-
-{-
-
-*Exercises03> testProcDec
-t knows q p
-q knows p
-p knows
-
--}
 
 -- |----------------------------------------------------------------------
 -- | Exercise 3
@@ -227,20 +191,15 @@ prog2 = Block (Dec "y" (N 0) -- located in 1
               (Dec "x" (N 0) -- located in 2
                EndDec))
 
-              (Proc "p" (Ass "x" (Add (V "x") (N 2)))
-              (Proc "q" (Call "p")
+              (Proc "p" "a1" "a2" (Ass "x" (Add (V "x") (V "a1"))) -- x = x +a1
                EndProc
-              ))
-
-              (Block (Dec "x" (N 5) -- located in 3
-                      EndDec)
-                     (Proc "p" (Ass "x" (Add (V "x") (N 1)))
-                      EndProc)
-                     (Comp
-                         (Call "q")
-                         (Ass "y" (V "x"))
-                     )
               )
+              (Comp
+                (Call "p" (N 5) (N 2))
+                (Ass "y" (V "x"))
+              )
+              
+              
 
 execProg2 =  showStore sto
   where Final sto = nsStm initEnvV initEnvP (Inter prog2 initStore)
@@ -255,7 +214,7 @@ execProg2 =  showStore sto
 -}
 
 -- | A recursive program to compute the factorial of 'n':
-
+{-
 prog3 :: Z -> Stm
 prog3 n = Block (Dec "y" (N 0) -- located in 1
                 (Dec "x" (N n) -- located in 2
@@ -280,7 +239,7 @@ prog3 n = Block (Dec "y" (N 0) -- located in 1
 
 execProg3 n =  showStore sto
   where Final sto = nsStm initEnvV initEnvP (Inter (prog3 n) initStore)
-
+-}
 -- | Expected output if PROC allows recursive procedures:
 
 {-
@@ -309,12 +268,12 @@ execProg3 n =  showStore sto
 -}
 
 -- | Finally, the factorial program imported from 'Proc.hs'
-
+{-}
 execFactorial = showStore sto
   where Final sto = nsStm initEnvV initEnvP (Inter factorial initStore)
 
 -- | Expected output:
-
+-}
 {-
 
 *Exercises04> execFactorial

@@ -38,7 +38,7 @@ data DecVar = Dec Var Aexp DecVar
             | EndDec
             deriving Show
 
-data DecProc = Proc Pname Stm DecProc
+data DecProc = Proc Pname Var Var Stm DecProc
              | EndProc
              deriving Show
 
@@ -48,7 +48,7 @@ data  Stm   =  Ass Var Aexp
             |  If Bexp Stm Stm
             |  While Bexp Stm
             |  Block DecVar DecProc Stm
-            |  Call Pname
+            |  Call Pname Aexp Aexp
             |  For Var Aexp Aexp Stm -- For x:= a1 to a2 do S
             |  Repeat Stm Bexp -- Repeat S until b
             deriving Show

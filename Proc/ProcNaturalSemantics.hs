@@ -77,24 +77,24 @@ nsDecV (InterD EndDec envV store) = FinalD envV store
 
 -- procedure environment
 
---                    p    s    snapshots    previous
---                    |    |     /    \         |
-data EnvProc = EnvP Pname Stm EnvVar EnvProc EnvProc
+--                    p            s    snapshots    previous
+--                    |            |     /    \         |
+data EnvProc = EnvP Pname Var Var Stm  EnvVar EnvProc EnvProc
              | EmptyEnvProc
 
 -- | Exercise 2.1
 
 -- update the procedure environment
 updP :: DecProc -> EnvVar -> EnvProc -> EnvProc
-updP (Proc p s procs) envV envP = updP procs envV (EnvP p s envV envP envP)
+updP (Proc p x1 x2 s procs) envV envP = updP procs envV (EnvP p x1 x2 s envV envP envP)
 updP EndProc envV envP = envP
 
 -- | Exercise 2.2
 
 -- lookup procedure p
-envProc :: EnvProc -> Pname -> (Stm, EnvVar, EnvProc)
-envProc (EnvP q s envV envP envs) p 
-	| p == q = (s, envV, envP)
+envProc :: EnvProc -> Pname -> (Stm, Var, Var, EnvVar, EnvProc)
+envProc (EnvP q x1 x2 s envV envP envs) p 
+	| p == q = (s, x1, x2, envV, envP)
 	| otherwise = envProc envs p
 envProc EmptyEnvProc p = error "undefined procedure"
 
@@ -156,23 +156,34 @@ nsStm envV envP (Inter (Block vars procs s) sto) = Final sto''
 		Final sto'' = nsStm envV' envP' (Inter s sto')
 
 -- non-recursive procedure call
-{-
-nsStm envV envP (Inter (Call p) sto) = Final sto'
+
+-- Dv = {x, y}
+-- envP q = (stm x1 x2 envV' envP')
+-- <Dv, envV', sto> ->D (envV'', sto') New environment for the procedure. A procedure has its own variables (parameters)
+-- 
+-- envV'', envP |- <stm, sto> -> sto'
+-- -------------------------------------------
+-- envV envP |- <Call q (a1, a2), sto> -> sto''
+
+
+
+nsStm envV envP (Inter (Call q a1 a2) sto) = Final sto''
 	where
-		Final sto' = nsStm envV' envP' (Inter s sto)
-		(s, envV', envP') = envProc envP p 
--}
+		(stm, x1, x2, envV', envP') = envProc envP q
+		vars = Dec x1 a1 (Dec x2 a2 EndDec)
+		FinalD envV'' sto' = nsDecV (InterD vars envV' sto)
+		Final sto'' = nsStm envV'' envP' (Inter stm sto')
 
 
 
-
+{-
 -- recursive procedure call
 nsStm envV envP (Inter (Call p) sto) = Final sto'
 	where
 		Final sto' = nsStm envV' envP'' (Inter s sto)
 		(s, envV', envP') = envProc envP p
 		envP'' = updP (Proc p s EndProc)  envV' envP'
-
+-}
 
 -- For x:= a1 to a2 do S statement
 nsStm envV envP (Inter (For x a1 a2 stm) sto) 
