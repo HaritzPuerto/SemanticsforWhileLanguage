@@ -197,16 +197,17 @@ prog1 = Block (Dec "x" (N 1)  -- located in 1
 
                EndProc
 
-               (While (Le (V "y") (N 5))
-                      (Comp (Ass "x" (Mult (V "x") (V "y")) )
+               
+                      (Or (Ass "x" (Mult (V "x") (N 3)) )
                             (Ass "y" (Add (V "y") (N 1)))
                       )
-               )
+               
 
 -- | This runs 'prog1' and shows the final store:
 
-execProg1 =  showStore sto
-  where Final sto = nsStm initEnvV initEnvP (Inter prog1 initStore)
+execProg1 = xs
+  where 
+    xs = [showStore sto | (Final sto) <- nsStm initEnvV initEnvP (Inter prog1 initStore)]
 
 -- | The expected output is:
 
@@ -219,161 +220,4 @@ recall: x is located in 1, y is located in 2
 
 -}
 
--- | This is the program we used to illustrate the difference between
--- | dynamic and static scope:
 
-prog2 :: Stm
-prog2 = Block (Dec "y" (N 0) -- located in 1
-              (Dec "x" (N 0) -- located in 2
-               EndDec))
-
-              (Proc "p" (Ass "x" (Add (V "x") (N 2)))
-              (Proc "q" (Call "p")
-               EndProc
-              ))
-
-              (Block (Dec "x" (N 5) -- located in 3
-                      EndDec)
-                     (Proc "p" (Ass "x" (Add (V "x") (N 1)))
-                      EndProc)
-                     (Comp
-                         (Call "q")
-                         (Ass "y" (V "x"))
-                     )
-              )
-
-execProg2 =  showStore sto
-  where Final sto = nsStm initEnvV initEnvP (Inter prog2 initStore)
-
--- | Expected output:
-
-{-
-
-*Exercises04> execProg2
-[(1,5),(2,2),(3,5)]
-
--}
-
--- | A recursive program to compute the factorial of 'n':
-
-prog3 :: Z -> Stm
-prog3 n = Block (Dec "y" (N 0) -- located in 1
-                (Dec "x" (N n) -- located in 2
-                 EndDec))
-
-                (Proc "fac"
-                (Block (Dec "z" (V "x") -- located from 3 to ...
-                        EndDec)
-                        EndProc
-
-                       (If (Eq (V "x") (N 1))
-                           Skip
-                           (Comp (Ass "x" (Sub (V "x") (N 1)))
-                           (Comp (Call "fac")
-                                 (Ass "y" (Mult (V "z") (V "y")))
-                           ))))
-                 EndProc)
-
-                (Comp (Ass "y" (N 1))
-                      (Call "fac")
-                )
-
-execProg3 n =  showStore sto
-  where Final sto = nsStm initEnvV initEnvP (Inter (prog3 n) initStore)
-
--- | Expected output if PROC allows recursive procedures:
-
-{-
-
-*Exercises04> execProg3 5
-[(1,120),(2,1),(3,5),(4,4),(5,3),(6,2),(7,1)]
-
-*Exercises04> execProg3 6
-[(1,720),(2,1),(3,6),(4,5),(5,4),(6,3),(7,2),(8,1)]
-
-*Exercises04> execProg3 10
-[(1,3628800),(2,1),(3,10),(4,9),(5,8),(6,7),(7,6),(8,5),(9,4),(10,3),(11,2),(12,1)]
-
-*Exercises04> execProg3 15
-[(1,1307674368000),(2,1),(3,15),(4,14),(5,13),(6,12),(7,11),(8,10),(9,9),(10,8),(11,7),(12,6),(13,5),(14,4),(15,3),(16,2),(17,1)]
-
--}
-
--- | Expected output if PROC disallows recursive procedures:
-
-{-
-
-*Exercises04> execProg3 5
-*** Exception: undefined procedure fac
-
--}
-
--- | Finally, the factorial program imported from 'Proc.hs'
-
-execFactorial = showStore sto
-  where Final sto = nsStm initEnvV initEnvP (Inter factorial initStore)
-
--- | Expected output:
-
-{-
-
-*Exercises04> execFactorial
-[(1,1),(2,120)]
-
--}
-
-
-exampleFor :: Stm
-exampleFor = Block 
-              (Dec "y" (N 0) -- located at pos 1
-               EndDec)
-               EndProc
-               (For "x" (N 1) (N 5) (Ass "y" (V "x"))
-               )
-
-
-
-execFor = showStore sto
-  where
-    Final sto = nsStm initEnvV initEnvP (Inter exampleFor initStore)
-
-sum3 :: Stm 
-sum3 = Block
-      (Dec "x" (N 0) EndDec)
-      EndProc 
-      (Comp (Ass "x" (N 0))
-             (Repeat 
-              (Ass "x" (Add (V "x") (N 1))) (Eq (V "x") (N 3)))
-      )
-
-execSum3 = showStore sto
-  where
-    Final sto = nsStm initEnvV initEnvP (Inter sum3 initStore)
-
--- | Exercise 3.2
-
--- | Complete the definition of the semantic function for PROC 'sNs' in
--- | 'ProcNaturalSemantics.hs'.
-
--- | You can test your code with the function below:
-
-execute :: Stm -> [(Integer, Integer)]
-execute prog = showStore $ sNs prog initStore
-
--- | Expected output:
-
-{-
-
-*Exercises04> execute prog1
-[(1,120),(2,6)]
-
-*Exercises04> execute prog2
-[(1,5),(2,2),(3,5)]
-
-*Exercises04> execute (prog3 6)
-[(1,720),(2,1),(3,6),(4,5),(5,4),(6,3),(7,2),(8,1)]
-
-*Exercises04> execute factorial
-[(1,1),(2,120)]
-
--}

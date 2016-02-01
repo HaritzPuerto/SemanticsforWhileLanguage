@@ -105,13 +105,13 @@ data Config = Inter Stm Store  -- <S, sto>
 
 -- representation of the transition relation <S, sto> -> stos'
 
-nsStm :: EnvVar -> EnvProc -> Config -> Config
+nsStm :: EnvVar -> EnvProc -> Config -> [Config]
 
 -- | Exercise 3.1
 
 -- x := a
 
-nsStm envV envP (Inter (Ass x a) sto) = Final sto'
+nsStm envV envP (Inter (Ass x a) sto) = [Final sto']
 	where
 		sto' = updateS sto l v
 		l = envV x
@@ -120,40 +120,40 @@ nsStm envV envP (Inter (Ass x a) sto) = Final sto'
 
 -- skip
 
-nsStm envV envP (Inter Skip sto) = Final sto
+nsStm envV envP (Inter Skip sto) = [Final sto]
 
 
 -- s1; s2
 
-nsStm envV envP (Inter (Comp ss1 ss2) sto) = Final sto''
+nsStm envV envP (Inter (Comp ss1 ss2) sto) = concat listOfStates
 	where
-		Final sto' = nsStm envV envP (Inter ss1 sto)
-		Final sto'' = nsStm envV envP (Inter ss2 sto')
+		xs = nsStm envV envP (Inter ss1 sto)
+		listOfStates = [nsStm envV envP (Inter ss2 sto') | (Final sto') <- xs]
 
 -- if b then s1 else s2
 
 nsStm envV envP (Inter (If b s1 s2) sto) 
-	| bVal b (sto . envV) = Final sto1
-	| otherwise = Final sto2
+	| bVal b (sto . envV) = xs1
+	| otherwise = xs2
 	where
-		Final sto1 = nsStm envV envP (Inter s1 sto)
-		Final sto2 = nsStm envV envP (Inter s2 sto)
+		xs1 = nsStm envV envP (Inter s1 sto)
+		xs2 = nsStm envV envP (Inter s2 sto) 
 
 -- while b do s
 
 nsStm envV envP (Inter (While b s) sto)
-	| bVal b (sto . envV) = Final sto''
- 	| otherwise = Final sto
+	| bVal b (sto . envV) = concat list
+ 	| otherwise = [Final sto]
  		where
- 			Final sto' = nsStm envV envP (Inter s sto)
- 			Final sto'' = nsStm envV envP (Inter (While b s) sto')
+ 			xs = nsStm envV envP (Inter s sto)
+ 			list = [nsStm envV envP (Inter (While b s) sto') | (Final sto') <- xs]
 
 
-nsStm envV envP (Inter (Block vars procs s) sto) = Final sto''
+nsStm envV envP (Inter (Block vars procs s) sto) = xs
 	where
 		FinalD envV' sto' = nsDecV (InterD vars envV sto)
 		envP' = updP procs  envV' envP
-		Final sto'' = nsStm envV' envP' (Inter s sto')
+		xs = nsStm envV' envP' (Inter s sto')
 
 -- non-recursive procedure call
 {-
@@ -167,39 +167,35 @@ nsStm envV envP (Inter (Call p) sto) = Final sto'
 
 
 -- recursive procedure call
-nsStm envV envP (Inter (Call p) sto) = Final sto'
+nsStm envV envP (Inter (Call p) sto) = xs
 	where
-		Final sto' = nsStm envV' envP'' (Inter s sto)
+		xs = nsStm envV' envP'' (Inter s sto)
 		(s, envV', envP') = envProc envP p
 		envP'' = updP (Proc p s EndProc)  envV' envP'
 
 
 -- For x:= a1 to a2 do S statement
 nsStm envV envP (Inter (For x a1 a2 stm) sto) 
-	| (aVal a1 (sto . envV)) <= (aVal a2 (sto . envV)) = Final finalSto
-	| otherwise = Final sto
+	| (aVal a1 (sto . envV)) <= (aVal a2 (sto . envV)) = concat list3
+	| otherwise = [Final sto]
 	where
 		decv = Dec x a1 EndDec 
 		FinalD envV' sto' = nsDecV (InterD decv envV sto) -- New scope for the for block
-		Final sto'' = nsStm envV' envP (Inter (Ass x a1) sto') -- x := a1
-		Final sto''' = nsStm envV' envP (Inter stm sto'') -- execute the statement
-		Final finalSto = nsStm envV' envP (Inter (For x (Add (V x) (N 1)) a2 stm) sto''') -- for x := x +1 to a2 do stm
+		list1 = nsStm envV' envP (Inter (Ass x a1) sto') -- x := a1
+		list2 = [nsStm envV' envP (Inter stm sto'') | (Final sto'') <- list1] -- execute the statement
+		list3 = [nsStm envV' envP (Inter (For x (Add (V x) (N 1)) a2 stm) sto''') | (Final sto''') <- (concat list2)] -- for x := x +1 to a2 do stm
 
-
--- Repeat S until b
-nsStm envV envP (Inter (Repeat stm b) sto) 
-	| bVal b (sto' . envV) = Final sto'
-	| otherwise = Final sto''
-		where
-			Final sto' = nsStm envV envP (Inter stm sto)
-			Final sto'' = nsStm envV envP (Inter (Repeat stm b) sto')
-
+nsStm envV envP (Inter (Or s1 s2) sto) = list1 ++ list2
+	where
+		list1 = nsStm envV envP (Inter s1 sto)
+		list2 = nsStm envV envP (Inter s2 sto)
 -- | Exercise 3.2
 
-sNs :: Stm -> Store -> Store
-sNs s sto = sto'
+sNs :: Stm -> Store -> [Store]
+sNs s sto = listSto
 	where
-		Final sto' = nsStm emptyEnvV emptyEnvP (Inter s sto)
+		xs = nsStm emptyEnvV emptyEnvP (Inter s sto)
+		listSto = [sto' | (Final sto') <- xs]
 
 emptyEnvV :: EnvVar
 emptyEnvV x = error $ "undefined variable " ++ x
