@@ -157,11 +157,11 @@ nsStm envV envP (Inter (Block vars procs s) sto) = Final sto''
 
 -- non-recursive procedure call
 
--- Dv = {x, y}
+-- Dv = {x1, x2}
 -- envP q = (stm x1 x2 envV' envP')
 -- <Dv, envV', sto> ->D (envV'', sto') New environment for the procedure. A procedure has its own variables (parameters)
 -- 
--- envV'', envP |- <stm, sto> -> sto'
+-- envV'', envP |- <stm, sto'> -> sto''
 -- -------------------------------------------
 -- envV envP |- <Call q (a1, a2), sto> -> sto''
 
